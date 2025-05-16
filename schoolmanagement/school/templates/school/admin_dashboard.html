@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | School Management System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2980b9;
+            --danger: #e74c3c;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+        .sidebar {
+            background-color: var(--dark);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+            width: 250px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            margin-bottom: 5px;
+            padding: 10px 15px;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        .stat-card .count {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-card .label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .bg-primary-light { background-color: rgba(52, 152, 219, 0.1); color: var(--primary); }
+        .bg-success-light { background-color: rgba(46, 204, 113, 0.1); color: var(--success); }
+        .bg-warning-light { background-color: rgba(243, 156, 18, 0.1); color: var(--warning); }
+        .bg-danger-light { background-color: rgba(231, 76, 60, 0.1); color: var(--danger); }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center text-white mb-4">
+            <h5>{{ request.user.get_full_name }}</h5>
+            <p>Administrator</p>
+        </div>
+        <ul class="nav flex-column px-3">
+            <li class="nav-item"><a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'book_room' %}"><i class="fas fa-calendar-check"></i> Room Bookings</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin_bookings' %}"><i class="fas fa-calendar-alt"></i> View Bookings</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin_issues' %}"><i class="fas fa-tools"></i> Issues</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin_user_management' %}"><i class="fas fa-users"></i> Users</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin_analytics' %}"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'admin_notifications' %}"><i class="fas fa-bell"></i> Notifications</a></li>
+            <li class="nav-item mt-4"><a class="nav-link text-danger" href="{% url 'user_logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <h2>Admin Dashboard</h2>
+        <div class="row mt-4">
+            <div class="col-md-3"><div class="card stat-card bg-primary-light"><div class="card-body"><i class="fas fa-calendar-check"></i><div class="count">{{ todays_bookings }}</div><div class="label">Today's Bookings</div></div></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-success-light"><div class="card-body"><i class="fas fa-users"></i><div class="count">{{ active_students }}</div><div class="label">Active Students</div></div></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-warning-light"><div class="card-body"><i class="fas fa-tools"></i><div class="count">{{ pending_issues.count }}</div><div class="label">Pending Issues</div></div></div></div>
+            <div class="col-md-3"><div class="card stat-card bg-danger-light"><div class="card-body"><i class="fas fa-chalkboard-teacher"></i><div class="count">{{ lecturers }}</div><div class="label">Lecturers</div></div></div></div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">Room Usage Analytics</div>
+                    <div class="card-body">
+                        <canvas id="roomUsageChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Recent Bookings</div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for booking in recent_bookings %}
+                            <li class="list-group-item">
+                                <strong>{{ booking.room.name }}</strong><br>
+                                <small>{{ booking.date }} — {{ booking.time_slot }}</small><br>
+                                <span class="text-muted">{{ booking.user.get_full_name }}</span>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item text-muted">No recent bookings</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Pending Maintenance Issues</div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <thead><tr><th>Location</th><th>Reported By</th><th>Status</th></tr></thead>
+                            <tbody>
+                                {% for issue in pending_issues %}
+                                <tr>
+                                    <td>{{ issue.location }}</td>
+                                    <td>{{ issue.user.get_full_name }}</td>
+                                    <td><span class="badge badge-warning">Pending</span></td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center text-muted">No pending issues</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Issue Status Breakdown</div>
+                    <div class="card-body">
+                        <canvas id="issueStatusChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+    <script>
+        const roomBookingCounts = {{ room_booking_counts|safe }};
+        const issueStatusCounts = {{ issue_status_counts|safe }};
+
+        new Chart(document.getElementById('roomUsageChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Room Bookings',
+                    data: roomBookingCounts,
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    yAxes: [{ ticks: { beginAtZero: true } }]
+                }
+            }
+        });
+
+        new Chart(document.getElementById('issueStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Resolved', 'Pending', 'In Progress'],
+                datasets: [{
+                    data: issueStatusCounts,
+                    backgroundColor: [
+                        'rgba(46, 204, 113, 0.7)',
+                        'rgba(243, 156, 18, 0.7)',
+                        'rgba(52, 152, 219, 0.7)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        });
+    </script>
+</body>
+</html>

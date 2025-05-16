@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Analytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap & FontAwesome -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        body {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .card i {
+            font-size: 2rem;
+        }
+
+        .dashboard-title {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Main Content -->
+<div class="main-content">
+    <h2 class="dashboard-title"><i class="fas fa-chart-bar"></i> Analytics Overview</h2>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-users"></i> Total Users</h5>
+                    <p class="card-text display-4">{{ total_users }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-user-graduate"></i> Students</h5>
+                    <p class="card-text display-4">{{ students }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-chalkboard-teacher"></i> Lecturers</h5>
+                    <p class="card-text display-4">{{ lecturers }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-user-shield"></i> Admins</h5>
+                    <p class="card-text display-4">{{ admins }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h5>Room Usage Analytics</h5>
+            <canvas id="roomUsageChart"></canvas>
+        </div>
+        <div class="col-md-6">
+            <h5>Issue Status Distribution</h5>
+            <canvas id="issueStatusChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- JS Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script>
+    const roomBookingCounts = {{ room_booking_counts|safe }};
+    const issueStatusCounts = {{ issue_status_counts|safe }};
+
+    const roomUsageCtx = document.getElementById('roomUsageChart').getContext('2d');
+    new Chart(roomUsageCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Room Bookings',
+                data: roomBookingCounts,
+                backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                yAxes: [{ ticks: { beginAtZero: true } }]
+            }
+        }
+    });
+
+    const issueStatusCtx = document.getElementById('issueStatusChart').getContext('2d');
+    new Chart(issueStatusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(issueStatusCounts),
+            datasets: [{
+                data: Object.values(issueStatusCounts),
+                backgroundColor: [
+                    'rgba(46, 204, 113, 0.7)',   // Resolved
+                    'rgba(243, 156, 18, 0.7)',   // Pending
+                    'rgba(52, 152, 219, 0.7)'    // Others
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                position: 'bottom'
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | School Management System</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.css">
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --secondary: #27ae60;
+            --info: #3498db;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+        }
+
+        .sidebar {
+            background-color: var(--dark);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding-top: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+            margin-bottom: 5px;
+            padding: 10px 15px;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+
+        .bg-primary-light {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: var(--primary);
+        }
+
+        .bg-info-light {
+            background-color: rgba(52, 152, 219, 0.1);
+            color: var(--info);
+        }
+
+        .timetable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .timetable th,
+        .timetable td {
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .timetable th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .timetable td {
+            vertical-align: middle;
+        }
+
+        .lecture-slot {
+            background-color: rgba(46, 204, 113, 0.1);
+            border-radius: 5px;
+            padding: 5px;
+            margin: 2px 0;
+        }
+
+        .user-profile {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .user-profile img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .user-profile h5 {
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .user-profile p {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+        }
+
+        .badge-course {
+            background-color: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="sidebar col-md-3 col-lg-2">
+        <div class="user-profile">
+            <h5>{{ request.user.get_full_name }}</h5>
+            <p>Computer Science</p>
+        </div>
+
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#timetable">
+                    <i class="fas fa-calendar-alt"></i> Timetable
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'student_announcement' %}">
+                    <i class="fa-solid fa-bullhorn"></i> Announcement
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'book_room'  %}">
+                    <i class="fas fa-book"></i> Book Study Room
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'report_issue' %}">
+                    <i class="fas fa-tools"></i> Report Issue
+                </a>
+            </li>
+            <li class="nav-item mt-4">
+                <a class="nav-link text-danger" href="{% url 'user_logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Student Dashboard</h2>
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary">
+                    <i class="fas fa-calendar-alt"></i> Today: {% now "F j, Y" %}
+                </button>
+                <button class="btn btn-outline-secondary">
+                    <i class="fas fa-download"></i> Export Timetable
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card stat-card bg-primary-light">
+                    <div class="card-body">
+                        <i class="fas fa-book-open"></i>
+                        <div class="count">{{ classes_today }}</div>
+                        <div class="label">Classes Today</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-info-light">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-check"></i>
+                        <div class="count">{{ upcoming_bookings }}</div>
+                        <div class="label">Upcoming Bookings</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Quick Actions
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary btn-block mb-2">
+                            <i class="fas fa-book"></i> Book Study Room
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        Today's Timetable
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>Course</th>
+                                        <th>Lecturer</th>
+                                        <th>Room</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>08:00 - 09:30</td>
+                                        <td>Computer Science 101</td>
+                                        <td>Dr. Smith</td>
+                                        <td>CS-202</td>
+                                        <td><span class="badge badge-success">Upcoming</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>10:00 - 11:30</td>
+                                        <td>Data Structures</td>
+                                        <td>Prof. Johnson</td>
+                                        <td>CS-305</td>
+                                        <td><span class="badge badge-success">Upcoming</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>13:00 - 14:30</td>
+                                        <td>Algorithms</td>
+                                        <td>Dr. Brown</td>
+                                        <td>CS-101</td>
+                                        <td><span class="badge badge-success">Upcoming</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        My Bookings
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">

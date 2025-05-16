@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Login | School Management System</title>
+
+  <!-- Bootstrap & Font Awesome -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    :root {
+      --student-primary: #2ecc71;
+      --student-secondary: #27ae60;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      background: white;
+      z-index: 1;
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .login-title {
+      color: var(--student-primary);
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .login-icon {
+      font-size: 2.5rem;
+      color: var(--student-primary);
+      margin-bottom: 15px;
+    }
+
+    .form-control {
+      border-radius: 50px;
+      padding: 12px 20px;
+      margin-bottom: 20px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .form-control:focus {
+      border-color: var(--student-primary);
+      box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.25);
+    }
+
+    .btn-login {
+      background-color: var(--student-primary);
+      border: none;
+      border-radius: 50px;
+      padding: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      width: 100%;
+      transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+      background-color: var(--student-secondary);
+      transform: translateY(-2px);
+    }
+
+    .forgot-password {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .forgot-password a {
+      color: #7f8c8d;
+      text-decoration: none;
+    }
+
+    .forgot-password a:hover {
+      color: var(--student-primary);
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 30px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+
+    /* Loader */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loader -->
+  <div id="loader">
+    <div class="spinner-border text-success" role="status">
+      <span class="sr-only">Loading...</span>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="login-container">
+      <div class="login-header">
+        <div class="login-icon">
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        <h2 class="login-title">Student Login</h2>
+        <p>Access your student portal</p>
+      </div>
+
+      {% if messages %}
+        <div id="message-container">
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="POST" action="#" onsubmit="showLoader()">
+        {% csrf_token %}
+        <div class="form-group">
+          <input type="text" class="form-control" name="username" placeholder="Student ID" required>
+        </div>
+        <div class="form-group">
+          <input type="password" class="form-control" name="password" placeholder="Password" required>
+        </div>
+        <button type="submit" class="btn btn-success btn-login">LOGIN</button>
+      </form>
+
+      <div class="forgot-password">
+        <a href="{% url 'student_register' %}">Sign in</a>
+      </div>
+
+      <div class="login-footer">
+        <p>Not a student? <a href="{% url 'admin_login' %}">Admin Login</a> or <a href="{% url 'lecturer_login' %}">Lecturer Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SweetAlert2 Message Script -->
+  <script>
+    {% if messages %}
+      {% for message in messages %}
+        Swal.fire({
+          icon: '{% if "error" in message.tags %}error{% elif "success" in message.tags %}success{% elif "warning" in message.tags %}warning{% else %}info{% endif %}',
+          title: '{{ message.tags|title }}',
+          text: '{{ message }}',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      {% endfor %}
+    {% endif %}
+
+    function showLoader() {
+      document.getElementById('loader').style.display = 'flex';
+    }
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
