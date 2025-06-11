@@ -26,6 +26,10 @@ from django.utils import timezone
 from django.shortcuts import render
 from .models import Timetable
 import datetime
+from django import template
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
 
 
 
@@ -158,20 +162,36 @@ def user_logout(request):
 
 # @login_required
 
+from django.contrib import messages
+
+@login_required
 def book_room(request):
+    user = request.user
+
+    # Determine role based on group
+    role = None
+    if user.is_superuser:
+        role = 'admin'
+    elif user.groups.filter(name='Lecturer').exists():
+        role = 'lecturer'
+    elif user.groups.filter(name='Student').exists():
+        role = 'student'
+
     if request.method == 'POST':
         form = BookingForm(request.POST)
         if form.is_valid():
             booking = form.save(commit=False)
-            booking.user = request.user
+            booking.user = user
             booking.save()
             messages.success(request, "Room booked successfully!")
-            return render(request, 'school/book_room.html')  # Or any relevant URL name
+            return redirect('book_room')
     else:
         form = BookingForm()
-    
-    return render(request, 'school/book_room.html', {'form': form})
 
+    return render(request, 'school/book_room.html', {
+        'form': form,
+        'role': role,
+    })
 
 # @login_required
 def admin_bookings(request):
@@ -201,11 +221,40 @@ def admin_issues(request):
 def admin_dashboard(request):
     return render(request, 'school/admin_dashboard.html')
 
+def student_dashboard(request):
+    return render(request, 'school/student_dashboard.html')
 
-# @login_required
+def lecturer_dashboard(request):
+    return render(request, 'school/lecturer_dashboard.html')
+
+
+@login_required
 def admin_user_management(request):
     users = User.objects.all()
     return render(request, 'school/admin_user_management.html', {'users': users})
+
+# Edit user (basic example – typically you'd use a form)
+@login_required
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.first_name = request.POST.get('first_name')
+        user.last_name = request.POST.get('last_name')
+        user.email = request.POST.get('email')
+        user.save()
+        messages.success(request, "User updated successfully.")
+        return redirect('admin_user_management')
+
+    return render(request, 'school/edit_user.html', {'user': user})
+
+# Delete user
+@login_required
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, 'User deleted successfully.')
+    return redirect('admin_user_management')
 
 
 
@@ -216,21 +265,25 @@ from .models import Booking, Issue
 
 from datetime import datetime
 
+from django.contrib.auth.models import User
+
 def admin_analytics(request):
     total_users = User.objects.count()
-    students = Group.objects.get(name="Student").user_set.count() if Group.objects.filter(name="Student").exists() else 0
-    lecturers = Group.objects.get(name="Lecturer").user_set.count() if Group.objects.filter(name="Lecturer").exists() else 0
+
+    # Define roles using flags, not groups
+    students = User.objects.filter(is_staff=False, is_superuser=False).count()
+    lecturers = User.objects.filter(is_staff=True, is_superuser=False).count()
     admins = User.objects.filter(is_superuser=True).count()
 
-    # Room booking stats (weekly)
-    room_booking_counts = [0] * 7  # Monday = 0, Sunday = 6
+    # Weekly room booking stats (Mon–Sun)
+    room_booking_counts = [0] * 7
     bookings = Booking.objects.all()
     for booking in bookings:
         if hasattr(booking, 'date') and booking.date:
             weekday = booking.date.weekday()
             room_booking_counts[weekday] += 1
 
-    # Issue status stats (based on 'is_resolved')
+    # Issue stats
     issues = Issue.objects.all()
     issue_status_counts = {
         "Resolved": issues.filter(is_resolved=True).count(),
@@ -245,8 +298,8 @@ def admin_analytics(request):
         'room_booking_counts': room_booking_counts,
         'issue_status_counts': issue_status_counts,
     }
-    return render(request, 'school/admin_analytics.html', context)
 
+    return render(request, 'school/admin_analytics.html', context)
 
 
 
@@ -283,6 +336,14 @@ def lecturer_bookings(request):
     return render(request, 'school/lecturer_bookings.html', {'bookings': bookings})
 
 def report_issue(request):
+    role = None
+    if request.user.is_superuser:
+        role = 'admin'
+    elif request.user.groups.filter(name='Lecturer').exists():
+        role = 'lecturer'
+    elif request.user.groups.filter(name='Student').exists():
+        role = 'student'
+
     if request.method == 'POST':
         form = IssueForm(request.POST)
         if form.is_valid():
@@ -292,7 +353,9 @@ def report_issue(request):
             return redirect('report_issue')  # Redirect after submission
     else:
         form = IssueForm()
-    return render(request, 'school/report_issue.html', {'form': form})
+
+    return render(request, 'school/report_issue.html', {'form': form, 'role': role})
+
 
 # @login_required
 def mark_issue_fixed(request, issue_id):
@@ -359,4 +422,55 @@ def dashboard_view(request):
     }
 
     return render(request, 'dashboard.html', context)
+
+
+
+register = template.Library()
+@register.filter(name='has_group')
+def has_group(user, group_name):
+    return user.groups.filter(name=group_name).exists()
+
+from django.shortcuts import render
+from .models import Timetable
+
+def view_timetable(request):
+    # Filter by current user if they are a lecturer
+    if request.user.groups.filter(name='Lecturer').exists():
+        timetable_entries = Timetable.objects.filter(lecturer=request.user)
+    else:
+        timetable_entries = Timetable.objects.all()  # For admins or other roles
+
+    return render(request, 'school/timetable.html', {'timetable_entries': timetable_entries})
+
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from .models import Timetable
+
+def export_timetable(request):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="timetable.pdf"'
+
+    p = canvas.Canvas(response)
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(100, 800, "Timetable Export")
+    p.setFont("Helvetica", 12)
+
+    y = 770
+    if request.user.groups.filter(name='Lecturer').exists():
+        timetable_entries = Timetable.objects.filter(lecturer=request.user)
+    else:
+        timetable_entries = Timetable.objects.all()
+
+    for entry in timetable_entries:
+        text = f"{entry.day} | {entry.start_time} - {entry.end_time} | {entry.subject} | Room: {entry.room}"
+        p.drawString(100, y, text)
+        y -= 20
+        if y < 50:
+            p.showPage()
+            y = 800
+
+    p.save()
+    return response
+
+
 

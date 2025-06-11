@@ -23,7 +23,7 @@
         <tbody>
             {% for booking in bookings %}
             <tr>
-                <td>{{ booking.user.username }}</td>
+                <td>{{ booking.user.first_name }} {{ booking.user.last_name }}</td>
                 <td>{{ booking.room.name }}</td>
                 <td>{{ booking.date }}</td>
                 <td>{{ booking.start_time }} - {{ booking.end_time }}</td>
@@ -51,6 +51,15 @@
             {% endfor %}
         </tbody>
     </table>
+    <div class="mb-3">
+    {% if role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    {% elif role == 'lecturer' %}
+        <a href="{% url 'lecturer_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    {% elif role == 'student' %}
+        <a href="{% url 'student_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+    {% endif %}
+</div>
 </div>
 </body>
 </html>

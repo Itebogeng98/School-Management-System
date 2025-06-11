@@ -38,7 +38,6 @@
 </head>
 <body>
 
-<!-- Main Content -->
 <div class="main-content">
     <h2 class="dashboard-title"><i class="fas fa-chart-bar"></i> Analytics Overview</h2>
 
@@ -83,10 +82,10 @@
             <h5>Room Usage Analytics</h5>
             <canvas id="roomUsageChart"></canvas>
         </div>
-        <div class="col-md-6">
-            <h5>Issue Status Distribution</h5>
-            <canvas id="issueStatusChart"></canvas>
-        </div>
+    </div>
+
+    <div class="mb-3 mt-4">
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
     </div>
 </div>
 
@@ -95,12 +94,12 @@
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+
 <script>
     const roomBookingCounts = {{ room_booking_counts|safe }};
     const issueStatusCounts = {{ issue_status_counts|safe }};
 
-    const roomUsageCtx = document.getElementById('roomUsageChart').getContext('2d');
-    new Chart(roomUsageCtx, {
+    new Chart(document.getElementById('roomUsageChart'), {
         type: 'bar',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -115,13 +114,21 @@
         options: {
             responsive: true,
             scales: {
-                yAxes: [{ ticks: { beginAtZero: true } }]
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true,
+                        callback: function(value) {
+                            if (Number.isInteger(value)) {
+                                return value;
+                            }
+                        }
+                    }
+                }]
             }
         }
     });
 
-    const issueStatusCtx = document.getElementById('issueStatusChart').getContext('2d');
-    new Chart(issueStatusCtx, {
+    new Chart(document.getElementById('issueStatusChart'), {
         type: 'doughnut',
         data: {
             labels: Object.keys(issueStatusCounts),
@@ -130,16 +137,13 @@
                 backgroundColor: [
                     'rgba(46, 204, 113, 0.7)',   // Resolved
                     'rgba(243, 156, 18, 0.7)',   // Pending
-                    'rgba(52, 152, 219, 0.7)'    // Others
                 ],
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
-            legend: {
-                position: 'bottom'
-            }
+            legend: { position: 'bottom' }
         }
     });
 </script>

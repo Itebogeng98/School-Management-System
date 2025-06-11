@@ -38,7 +38,7 @@
                     </td>
 
 
-                    <td>{{ issue.user }}</td>
+                    <td>{{ issue.user.first_name }} {{ issue.user.last_name }}</td>
                     <td>{{ issue.created_at|date:"Y-m-d H:i" }}</td>
                 </tr>
                 {% empty %}

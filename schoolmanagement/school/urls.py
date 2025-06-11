@@ -16,6 +16,8 @@ urlpatterns = [
     path('admin/booking/approve/<int:booking_id>/', views.approve_booking, name='approve_booking'),
     path('admin/issues/', views.admin_issues, name='admin_issues'),
     path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('student/dashboard/', views.student_dashboard, name='student_dashboard'),
+    path('lecturer/dashboard/', views.lecturer_dashboard, name='lecturer_dashboard'),
     path('admin/user-management/', views.admin_user_management, name='admin_user_management'),
     path('admin/analytics/', views.admin_analytics, name='admin_analytics'),
     path('school/admin/notifications/', views.admin_notifications, name='admin_notifications'),
@@ -29,6 +31,8 @@ urlpatterns = [
     
     # Student
     path('student_announcement/', views.student_announcement, name='student_announcement'),
-    
-
+    path('admin/users/edit/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('admin/users/delete/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('timetable/', views.view_timetable, name='view_timetable'),
+    path('export-timetable/', views.export_timetable, name='export_timetable'),
 ]

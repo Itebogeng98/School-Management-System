@@ -98,67 +98,6 @@
             <div class="col-md-3"><div class="card stat-card bg-warning-light"><div class="card-body"><i class="fas fa-tools"></i><div class="count">{{ pending_issues.count }}</div><div class="label">Pending Issues</div></div></div></div>
             <div class="col-md-3"><div class="card stat-card bg-danger-light"><div class="card-body"><i class="fas fa-chalkboard-teacher"></i><div class="count">{{ lecturers }}</div><div class="label">Lecturers</div></div></div></div>
         </div>
-
-        <div class="row mt-4">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">Room Usage Analytics</div>
-                    <div class="card-body">
-                        <canvas id="roomUsageChart" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header">Recent Bookings</div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush">
-                            {% for booking in recent_bookings %}
-                            <li class="list-group-item">
-                                <strong>{{ booking.room.name }}</strong><br>
-                                <small>{{ booking.date }} — {{ booking.time_slot }}</small><br>
-                                <span class="text-muted">{{ booking.user.get_full_name }}</span>
-                            </li>
-                            {% empty %}
-                            <li class="list-group-item text-muted">No recent bookings</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Pending Maintenance Issues</div>
-                    <div class="card-body p-0">
-                        <table class="table mb-0">
-                            <thead><tr><th>Location</th><th>Reported By</th><th>Status</th></tr></thead>
-                            <tbody>
-                                {% for issue in pending_issues %}
-                                <tr>
-                                    <td>{{ issue.location }}</td>
-                                    <td>{{ issue.user.get_full_name }}</td>
-                                    <td><span class="badge badge-warning">Pending</span></td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="3" class="text-center text-muted">No pending issues</td></tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Issue Status Breakdown</div>
-                    <div class="card-body">
-                        <canvas id="issueStatusChart" height="200"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Scripts -->
